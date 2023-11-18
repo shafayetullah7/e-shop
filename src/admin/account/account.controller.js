@@ -19,6 +19,12 @@ const createAdmin = async (req, res) => {
       return res.status(403).send({ error: true, message: "Already exists" });
     }
 
+    if (password.length<6) {
+      return res
+        .status(400)
+        .send({ error: true, message: "Password must be at least 6 characters" });
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -67,8 +73,8 @@ const loginAdmin = async (req, res) => {
     // Create a JWT token
     const token = jwt.sign(
       { userId: admin._id, email: admin.email, role: "admin" },
-      "your_secret_key", // Replace with a strong secret key
-      { expiresIn: "1h" } // Token expiration time
+      process.env.JWT_SECRET, // Replace with a strong secret key
+      { expiresIn: "3h" } // Token expiration time
     );
 
     return res.status(200).send({ admin, token });
@@ -79,37 +85,8 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-const isAdmin = (req, res, next) => {
-  // Get the token from the request headers or query parameters
-  const token = req.headers.authorization;
-
-  if (!token) {
-    return res.status(401).json({ error: true, message: "No token provided" });
-  }
-
-  // Verify the token
-  jwt.verify(token, "your_secret_key", (err, decoded) => {
-    if (err) {
-      return res
-        .status(401)
-        .json({ error: true, message: "Failed to authenticate token" });
-    }
-
-    // Check if the decoded user is an admin (customize this based on your token structure)
-    if (decoded.role === "admin") {
-      // Admin user, proceed to the next middleware or route handler
-      next();
-    } else {
-      // Non-admin user, send unauthorized response
-      return res
-        .status(403)
-        .json({ error: true, message: "Unauthorized access" });
-    }
-  });
-};
 
 module.exports = {
   createAdmin,
   loginAdmin,
-  isAdmin,
 };

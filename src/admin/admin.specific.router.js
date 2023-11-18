@@ -3,6 +3,6 @@ const adminAccountRouter = require('./account/account.routes');
 
 const adminSpecificRouter = express.Router();
 
-adminSpecificRouter.use('/account',adminAccountRouter);
+adminSpecificRouter.use('/auth',adminAccountRouter);
 
 module.exports = adminSpecificRouter;
