@@ -19,10 +19,11 @@ const createAdmin = async (req, res) => {
       return res.status(403).send({ error: true, message: "Already exists" });
     }
 
-    if (password.length<6) {
-      return res
-        .status(400)
-        .send({ error: true, message: "Password must be at least 6 characters" });
+    if (password.length < 6) {
+      return res.status(400).send({
+        error: true,
+        message: "Password must be at least 6 characters",
+      });
     }
 
     // Hash the password
@@ -77,14 +78,17 @@ const loginAdmin = async (req, res) => {
       { expiresIn: "3h" } // Token expiration time
     );
 
-    return res.status(200).send({ admin, token });
+    const adminData = {email:admin.email,username:admin.username,createdAt:admin.createdAt,updatedAt:admin.updatedAt};
+    console.log(adminData);
+
+    return res.status(200).send({ admin:adminData, token });
   } catch (error) {
+    console.log(error.message);
     return res
       .status(500)
       .send({ error: true, message: "Something went wrong" });
   }
 };
-
 
 module.exports = {
   createAdmin,

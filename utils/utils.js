@@ -2,10 +2,15 @@ const jwt = require('jsonwebtoken');
 
 const authMiddleware = (requiredRole) => (req, res, next) => {
   // Check if the request has a valid JWT token
-  const token = req.header('Authorization');
+  const authorization = req.header('Authorization');
+  if (!authorization) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  const token = authorization.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
