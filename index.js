@@ -4,6 +4,7 @@ const cors = require("cors");
 const mongoose = require('mongoose');
 const connectToDatabase = require("./db");
 const adminSpecificRouter = require("./src/admin/admin.specific.router");
+const customerSpecificRouter = require("./src/customer/customer.specific.router");
 
 
 const port = process.env.PORT || 5000;
@@ -20,7 +21,7 @@ app.get("/", (req, res) => {
 
 
 app.use('/admin',adminSpecificRouter);
-
+app.use('/customer', customerSpecificRouter);
 
 mongoose.connection.once('open', () => {
     app.listen(port, () => {
