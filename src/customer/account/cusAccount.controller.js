@@ -1,3 +1,4 @@
+const Cart = require('../../../model/customer/Cart');
 const Customer = require('../../../model/customer/Customer');
 const bcrypt = require('bcrypt');
 const createCustomer = async (req, res) => {
@@ -48,7 +49,56 @@ const createCustomer = async (req, res) => {
       .send({ error: true, message: "Something went wrong" });
   }
 };
-
+const addToCart = async ( req, res ) => {
+  try {
+    const { email, product } = req.body;
+    if( !email || !product){
+      return res
+        .status(400)
+        .send({ error: true, message: "Missing required data" });
+    }
+    const existingCart = await Cart.findOne({$and: [
+      {email},
+      {status: 'active'}
+    ]});
+    if (!existingCart){
+      const newCart = new Cart({
+        email,
+        productList: [product],
+        status: 'active'
+      });
+      const createdCart = await newCart.save();
+      res.status(200).send(createdCart);
+    }else{
+      const updatedCart = await Cart.findOneAndUpdate({$and: [
+        {email},
+        {status: 'active'}
+      ]},
+      {$push: {productList: product}},
+      {new : true}
+      );
+      res.status(200).send(updatedCart);
+    }
+  } catch (error) {
+    return res
+    .status(500)
+    .send({ error: true, message: "Something went wrong"});
+  }
+};
+const updateCart = async ( req, res ) => {
+  try {
+    const {email, productId, quantity } = req.body;
+  await Cart.updateOne(
+    { email: email, 'productList.productId': productId },
+    { $set: { 'productList.$.quantity': quantity } }
+  );
+  res.status(200).send({message: "Updated Successfully"});
+  } catch (err) {
+    res.status(500).send({ error: true, message: "Something went wrong"});
+  }
+};
 module.exports = {
-  createCustomer
+  createCustomer,
+  addToCart,
+  updateCart
 }
