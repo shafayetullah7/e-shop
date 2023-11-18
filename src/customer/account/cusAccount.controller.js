@@ -2,8 +2,8 @@ const Customer = require('../../../model/customer/Customer');
 const bcrypt = require('bcrypt');
 const createCustomer = async (req, res) => {
   try {
-    const { email, fname, lname, password } = req.body;
-    if (!email || !fname || !password || !lname) {
+    const { email, fname, lname, password, image } = req.body;
+    if (!email || !fname || !password || !lname ) {
       return res
         .status(400)
         .send({ error: true, message: "Missing required data" });
@@ -29,13 +29,19 @@ const createCustomer = async (req, res) => {
       password: hashedPassword,
       email,
       fname,
-      lname
+      lname,
+      image
     });
 
     // Save the new Customer to the database
     await newCustomer.save();
-
-    return res.status(200).send({ newCustomer });
+    const customer = {
+      fname,
+      lname,
+      email,
+      image
+    };
+    return res.status(200).send(customer);
   } catch (error) {
     return res
       .status(500)
