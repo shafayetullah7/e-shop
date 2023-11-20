@@ -63,7 +63,26 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const getSingleOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Find the order by its ID
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   makeOrder,
   cancelOrder,
+  getSingleOrder
 };

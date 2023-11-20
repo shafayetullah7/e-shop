@@ -1,7 +1,6 @@
 const Order = require("../../../model/Order");
 const Cart = require("../../../model/customer/Cart");
 
-
 const serveOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -10,17 +9,17 @@ const serveOrder = async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     // Update the status of the order to 'served'
-    order.status = 'served';
+    order.status = "served";
     await order.save();
 
     res.json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -33,28 +32,60 @@ const cancelOrder = async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     // Update the status of the order to 'cancelled'
-    order.status = 'cancelled';
+    order.status = "cancelled";
     await order.save();
 
     // Update the status of the associated cart to 'active'
     const cart = await Cart.findById(order.cart);
     if (cart) {
-      cart.status = 'active';
+      cart.status = "active";
       await cart.save();
     }
 
     res.json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getPendingOrders = async (req, res) => {
+  try {
+    // Find all orders with the status 'pending'
+    const pendingOrders = await Order.find({ status: "pending" });
+
+    res.json(pendingOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getSingleOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Find the order by its ID
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 module.exports = {
   serveOrder,
   cancelOrder,
+  getPendingOrders,
+  getSingleOrder
 };
