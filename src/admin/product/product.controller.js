@@ -2,6 +2,8 @@ const Product = require("../../../model/Product");
 
 // Create a new product
 const createProduct = async (req, res) => {
+  console.log(req.body);
+  console.log(req.decoded);
   try {
     if (req.decoded.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized access" });
@@ -97,15 +99,46 @@ const updateProduct = async (req, res) => {
 const getProductsByCategory = async (req, res) => {
   try {
     const category = req.query.category;
+    const name = req.query.name;
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
 
     // If category is not provided, return all products
-    const query = category ? { category } : {};
-    const products = await Product.find(query);
+    const query = category ? { category } : name ? { name } : {};
 
-    res.json(products);
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / pageSize);
+
+    const products = await Product.find(query)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
+
+    return res.json({
+      products,
+      page,
+      totalPages,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getTotalPagesForAllProducts = async (req, res) => {
+  try {
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
+
+    const totalProducts = await Product.count();
+    const totalPages = Math.ceil(totalProducts / pageSize);
+    // console.log(totalProducts);
+
+    return res.json({
+      totalProducts,
+      totalPages,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -114,6 +147,11 @@ const updateSpecification = async (req, res) => {
     const productId = req.params.id; // replace with your actual product ID
     const specificationId = req.params.specificationId; // replace with your actual specification ID
     const { title, value } = req.body;
+    if (!title || !value) {
+      return res
+        .status(400)
+        .send({ error: true, message: "Missing required data" });
+    }
 
     const result = await Product.updateOne(
       { _id: productId, "specification._id": specificationId },
@@ -146,4 +184,5 @@ module.exports = {
   updateProduct,
   getProductsByCategory,
   updateSpecification,
+  getTotalPagesForAllProducts,
 };
