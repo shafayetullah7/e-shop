@@ -100,18 +100,22 @@ const getProductsByCategory = async (req, res) => {
   try {
     const category = req.query.category;
     const name = req.query.name;
+    const all = req.query.all;
     const page = parseInt(req.query.page) || 1; // Default to page 1
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
+    const pageSize = parseInt(req.query.pageSize) || 12; // Default to 10 items per page
 
     // If category is not provided, return all products
     const query = category ? { category } : name ? { name } : {};
-
+    let products;
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / pageSize);
-
-    const products = await Product.find(query)
-      .skip((page - 1) * pageSize)
-      .limit(pageSize);
+    if (all) {
+      products = await Product.find();
+    } else {
+      products = await Product.find(query)
+        .skip((page - 1) * pageSize)
+        .limit(pageSize);
+    }
 
     return res.json({
       products,
@@ -126,7 +130,7 @@ const getProductsByCategory = async (req, res) => {
 
 const getTotalPagesForAllProducts = async (req, res) => {
   try {
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 items per page
+    const pageSize = parseInt(req.query.pageSize) || 12; // Default to 10 items per page
 
     const totalProducts = await Product.count();
     const totalPages = Math.ceil(totalProducts / pageSize);
