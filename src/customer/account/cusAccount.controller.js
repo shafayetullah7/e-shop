@@ -1,10 +1,11 @@
-const Cart = require('../../../model/customer/Cart');
-const Customer = require('../../../model/customer/Customer');
-const bcrypt = require('bcrypt');
+const Cart = require("../../../model/customer/Cart");
+const Customer = require("../../../model/customer/Customer");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const createCustomer = async (req, res) => {
   try {
     const { email, fname, lname, password, image } = req.body;
-    if (!email || !fname || !password || !lname ) {
+    if (!email || !fname || !password || !lname) {
       return res
         .status(400)
         .send({ error: true, message: "Missing required data" });
@@ -16,10 +17,11 @@ const createCustomer = async (req, res) => {
       return res.status(403).send({ error: true, message: "Already exists" });
     }
 
-    if (password.length<6) {
-      return res
-        .status(400)
-        .send({ error: true, message: "Password must be at least 6 characters" });
+    if (password.length < 6) {
+      return res.status(400).send({
+        error: true,
+        message: "Password must be at least 6 characters",
+      });
     }
 
     // Hash the password
@@ -31,74 +33,70 @@ const createCustomer = async (req, res) => {
       email,
       fname,
       lname,
-      image
+      image,
     });
 
     // Save the new Customer to the database
     await newCustomer.save();
-    const customer = {
-      fname,
-      lname,
-      email,
-      image
-    };
-    return res.status(200).send(customer);
+    delete newCustomer.password;
+
+    const token = jwt.sign(
+      { userId: newCustomer._id, email: newCustomer.email, role: "customer" },
+      process.env.JWT_SECRET,
+      { expiresIn: "5h" }
+    );
+    return res
+      .status(200)
+      .send({ success: true, message: "Customer created", newCustomer, token });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .send({ error: true, message: "Something went wrong" });
   }
 };
-const addToCart = async ( req, res ) => {
+
+const customerLogin = async (req, res) => {
   try {
-    const { email, product } = req.body;
-    if( !email || !product){
+    const { email, password } = req.body;
+    if (!email || !password) {
       return res
         .status(400)
         .send({ error: true, message: "Missing required data" });
     }
-    const existingCart = await Cart.findOne({$and: [
-      {email},
-      {status: 'active'}
-    ]});
-    if (!existingCart){
-      const newCart = new Cart({
-        email,
-        productList: [product],
-        status: 'active'
+    const customer = await Customer.findOne({ email });
+    if (!customer) {
+      return res.status(404).send({
+        success: false,
+        message: "Customer not found",
       });
-      const createdCart = await newCart.save();
-      res.status(200).send(createdCart);
-    }else{
-      const updatedCart = await Cart.findOneAndUpdate({$and: [
-        {email},
-        {status: 'active'}
-      ]},
-      {$push: {productList: product}},
-      {new : true}
-      );
-      res.status(200).send(updatedCart);
     }
-  } catch (error) {
+    const passwordMatch = await bcrypt.compare(password, customer.password);
+    if (!passwordMatch) {
+      return res.status(400).send({
+        success: false,
+        message: "Wrong user info",
+      });
+    }
+
+    const token = jwt.sign(
+      { userId: customer._id, email: customer.email, role: "customer" },
+      process.env.JWT_SECRET,
+      { expiresIn: "5h" }
+    );
     return res
-    .status(500)
-    .send({ error: true, message: "Something went wrong"});
+      .status(200)
+      .send({ success: true, message: "Customer logged in", customer, token });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .send({ error: true, message: "Something went wrong" });
   }
 };
-const updateCart = async ( req, res ) => {
-  try {
-    const {email, productId, quantity } = req.body;
-  await Cart.updateOne(
-    { email: email, 'productList.productId': productId },
-    { $set: { 'productList.$.quantity': quantity } }
-  );
-  res.status(200).send({message: "Updated Successfully"});
-  } catch (err) {
-    res.status(500).send({ error: true, message: "Something went wrong"});
-  }
-};
+
+
 module.exports = {
   createCustomer,
-  addToCart,
-  updateCart
-}
+  customerLogin,
+};

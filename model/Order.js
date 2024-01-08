@@ -8,7 +8,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "served", "cancelled"],
+      enum: ["pending", "served", "rejected", "cancelled"],
       default: "pending",
     },
     cart: {

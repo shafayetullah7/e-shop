@@ -22,6 +22,10 @@ const cartSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        unitPrice: {
+          type: Number,
+          required: true,
+        },
         price: {
           type: Number,
           required: true,

@@ -11,6 +11,11 @@ const serveOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
+    if (order.status !== "pending") {
+      return res
+        .status(400)
+        .send({ error: true, message: `Order is already ${order.status}` });
+    }
 
     // Update the status of the order to 'served'
     order.status = "served";
@@ -24,7 +29,7 @@ const serveOrder = async (req, res) => {
 };
 
 // Controller to cancel an order
-const cancelOrder = async (req, res) => {
+const rejectOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
@@ -34,17 +39,15 @@ const cancelOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
+    if (order.status !== "pending") {
+      return res
+        .status(400)
+        .send({ error: true, message: `Order is already ${order.status}` });
+    }
 
     // Update the status of the order to 'cancelled'
-    order.status = "cancelled";
+    order.status = "rejected";
     await order.save();
-
-    // Update the status of the associated cart to 'active'
-    const cart = await Cart.findById(order.cart);
-    if (cart) {
-      cart.status = "active";
-      await cart.save();
-    }
 
     res.json(order);
   } catch (error) {
@@ -53,10 +56,11 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-const getPendingOrders = async (req, res) => {
+const getOrders = async (req, res) => {
   try {
     // Find all orders with the status 'pending'
-    const pendingOrders = await Order.find({ status: "pending" });
+    const status = req.query.status || "pending";
+    const pendingOrders = await Order.find({ status });
 
     res.json(pendingOrders);
   } catch (error) {
@@ -85,7 +89,7 @@ const getSingleOrder = async (req, res) => {
 
 module.exports = {
   serveOrder,
-  cancelOrder,
-  getPendingOrders,
-  getSingleOrder
+  rejectOrder,
+  getOrders,
+  getSingleOrder,
 };

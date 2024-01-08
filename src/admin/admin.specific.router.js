@@ -7,6 +7,6 @@ const adminSpecificRouter = express.Router();
 
 adminSpecificRouter.use('/auth',adminAccountRouter);
 adminSpecificRouter.use('/products',productRouter);
-adminSpecificRouter.use('/order',adminOrderRouter);
+adminSpecificRouter.use('/orders',adminOrderRouter);
 
 module.exports = adminSpecificRouter;
