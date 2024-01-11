@@ -150,7 +150,10 @@ const getAllItemsInCart = async (req, res) => {
     }
 
     // Find the cart for the given user and with "active" status
-    const cart = await Cart.findOne({ email, status: "active" });
+    const cart = await Cart.findOne({ email, status: "active" }).populate({
+      path: "productList.productId",
+      select: "name price productImage company",
+    });
 
     // If cart doesn't exist, return an error
     if (!cart) {
