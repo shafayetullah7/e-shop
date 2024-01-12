@@ -6,6 +6,10 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    customer:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Customer'
+    },
     status: {
       type: String,
       enum: ["pending", "served", "rejected", "cancelled"],

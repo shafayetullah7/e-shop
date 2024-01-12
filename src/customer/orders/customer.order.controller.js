@@ -1,5 +1,6 @@
 const Order = require("../../../model/Order");
 const Cart = require("../../../model/customer/Cart");
+const Customer = require("../../../model/customer/Customer");
 
 // Controller to make a new order
 
@@ -13,6 +14,7 @@ const makeOrder = async (req, res) => {
         .send({ error: true, message: "Unauthorized access" });
     }
 
+    const customer = await Customer.findOne({ email });
     // Find the user's cart with an "active" status
     const cart = await Cart.findOne({ email, status: "active" });
 
@@ -24,6 +26,7 @@ const makeOrder = async (req, res) => {
     // Create a new order with the user's cart
     const newOrder = new Order({
       cart: cart._id,
+      customer: customer._id,
     });
 
     // Save the order to the database

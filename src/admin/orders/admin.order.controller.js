@@ -60,7 +60,9 @@ const getOrders = async (req, res) => {
   try {
     // Find all orders with the status 'pending'
     const status = req.query.status || "pending";
-    const pendingOrders = await Order.find({ status });
+    const pendingOrders = await Order.find({ status })
+      .populate("customer")
+      .populate("cart");
 
     res.json(pendingOrders);
   } catch (error) {
@@ -74,7 +76,9 @@ const getSingleOrder = async (req, res) => {
     const { orderId } = req.params;
 
     // Find the order by its ID
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId)
+      .populate("customer")
+      .populate("cart");
 
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
